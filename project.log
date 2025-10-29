@@ -1,0 +1,5 @@
+2025-10-29 17:30:38,801 | INFO | === data_prep start ===
+2025-10-29 17:30:38,804 | INFO | Loaded customers from customers_data.csv with shape (201, 4)
+2025-10-29 17:30:38,804 | INFO | Loaded products from products_data.csv with shape (100, 4)
+2025-10-29 17:30:38,809 | INFO | Loaded sales from sales_data.csv with shape (2001, 7)
+2025-10-29 17:30:38,809 | INFO | === data_prep done ===
