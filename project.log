@@ -3,3 +3,12 @@
 2025-10-29 18:06:47,016 | INFO | Loaded products from products_data.csv with shape (100, 4)
 2025-10-29 18:06:47,016 | INFO | Loaded sales from sales_data.csv with shape (2001, 7)
 2025-10-29 18:06:47,016 | INFO | === data_prep done ===
+2025-10-29 18:33:INFO    AT utils_logger.py:105: Logging to file: C:\Repos\smart-store-lynzie\project.log
+2025-10-29 18:33:INFO    AT data_prep.py:52: Starting data preparation...
+2025-10-29 18:33:INFO    AT data_prep.py:32: Reading raw data from C:\Repos\smart-store-lynzie\data\raw\customers_data.csv.
+2025-10-29 18:33:INFO    AT data_prep.py:35: customers_data.csv: loaded DataFrame with shape 201 rows x 4 cols
+2025-10-29 18:33:INFO    AT data_prep.py:32: Reading raw data from C:\Repos\smart-store-lynzie\data\raw\products_data.csv.
+2025-10-29 18:33:INFO    AT data_prep.py:35: products_data.csv: loaded DataFrame with shape 100 rows x 4 cols
+2025-10-29 18:33:INFO    AT data_prep.py:32: Reading raw data from C:\Repos\smart-store-lynzie\data\raw\sales_data.csv.
+2025-10-29 18:33:INFO    AT data_prep.py:35: sales_data.csv: loaded DataFrame with shape 2001 rows x 7 cols
+2025-10-29 18:33:INFO    AT data_prep.py:64: Data preparation complete.
