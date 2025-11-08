@@ -5,6 +5,7 @@ ProductID,ProductName,Category,UnitPrice,StockQtyUnits,Supplier
 2003,Electronics-Training,Clothing,385.18,153,Acme
 2004,Office-Where,Home,927.25,24,Globex
 2005,Office-Huge,Home,428.78,119,InHouse
+2006,Office-Class,Clothing,198.0,238,nan
 2007,Clothing-Over,Electronics,583.39,170,Globex
 2008,Electronics-Skin,Home,66.59,237,InHouse
 2009,Office-Raise,Clothing,66.31,409,Acme

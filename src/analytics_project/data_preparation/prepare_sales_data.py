@@ -1,52 +1,24 @@
-# prepare_sales_data.py
-# Clean sales_data.csv and write data/prepared/sales_data_prepared.csv
+# src/analytics_project/data_preparation/prepare_sales_data.py
+from __future__ import annotations
 
 from pathlib import Path
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[3]
-RAW = ROOT / "data" / "raw"
-PREP = ROOT / "data" / "prepared"
-PREP.mkdir(parents=True, exist_ok=True)
-
-INFILE = RAW / "sales_data.csv"
-OUTFILE = PREP / "sales_data_prepared.csv"
-
-ALLOWED_PAY = {"Cash", "Card", "EBT", "GiftCard"}
+from src.analytics_project.data_scrubber import DataScrubber, Range
 
 
-def iqr_keep(series: pd.Series, k: float = 1.5):
-    q1, q3 = series.quantile([0.25, 0.75])
-    iqr = q3 - q1
-    lo, hi = q1 - k * iqr, q3 + k * iqr
-    return series.between(lo, hi)
+RAWFILE = Path("data/raw/sales_data.csv")
+OUTFILE = Path("data/prepared/sales_data_prepared.csv")
 
 
-def clean_sales(df: pd.DataFrame) -> pd.DataFrame:
-    # Trim strings
-    for c in df.select_dtypes(include="object").columns:
-        df[c] = df[c].astype(str).str.strip()
+def main() -> None:
+    # 1) Load raw
+    raw = pd.read_csv(RAWFILE)
 
-    # Dates to datetime (coerce bad ones to NaT, then drop)
-    if "SaleDate" in df.columns:
-        df["SaleDate"] = pd.to_datetime(df["SaleDate"], errors="coerce")
-        df = df.dropna(subset=["SaleDate"])
-
-    # SaleAmount numeric > 0 and remove outliers
-    if "SaleAmount" in df.columns:
-        df["SaleAmount"] = pd.to_numeric(df["SaleAmount"], errors="coerce")
-        df = df[df["SaleAmount"].gt(0)]
-        df = df[iqr_keep(df["SaleAmount"])]
-
-    # DiscountPct numeric in [0,100] and remove outliers
-    if "DiscountPct" in df.columns:
-        df["DiscountPct"] = pd.to_numeric(df["DiscountPct"], errors="coerce")
-        df = df[df["DiscountPct"].between(0, 100, inclusive="both")]
-        df = df[iqr_keep(df["DiscountPct"])]
-
-    # PaymentType normalization
-    if "PaymentType" in df.columns:
-        repl = {
+    # 2) Define category normalization + allow-list
+    allowed_pay = {"Cash", "Card", "EBT", "GiftCard"}
+    mappings = {
+        "PaymentType": {
             "gift card": "GiftCard",
             "Gift Card": "GiftCard",
             "card": "Card",
@@ -58,26 +30,30 @@ def clean_sales(df: pd.DataFrame) -> pd.DataFrame:
             "nan": pd.NA,
             "None": pd.NA,
         }
-        df["PaymentType"] = df["PaymentType"].replace(repl)
-        df = df[df["PaymentType"].isin(ALLOWED_PAY)]
+    }
 
-    # Drop duplicate transactions by TransactionID
-    if "TransactionID" in df.columns:
-        df = df.drop_duplicates(subset=["TransactionID"])
-    else:
-        df = df.drop_duplicates()
+    # 3) Clean with reusable scrubber
+    scrub = DataScrubber(raw)
+    cleaned = (
+        scrub.trim_strings()
+        .parse_dates(["SaleDate"], drop_bad=True)
+        .coerce_numeric(["SaleAmount", "DiscountPct"], strip_commas=True)
+        .drop_nonpositive(["SaleAmount"])  # remove <= 0
+        .bound_range({"DiscountPct": Range(0, 100)})  # keep 0–100
+        .normalize_categories(mappings)
+        .isin_allowlist({"PaymentType": allowed_pay})
+        .drop_duplicates(subset=["TransactionID"])
+        .remove_outliers_iqr(["SaleAmount", "DiscountPct"])  # IQR filter
+        .df
+    )
 
-    return df
-
-
-def main():
-    raw = pd.read_csv(INFILE)
-    raw_count = len(raw)
-    cleaned = clean_sales(raw.copy())
-    cleaned_count = len(cleaned)
+    # 4) Save
+    OUTFILE.parent.mkdir(parents=True, exist_ok=True)
     cleaned.to_csv(OUTFILE, index=False)
-    print(f"Sales raw: {raw_count}  -> prepared: {cleaned_count}")
-    print(f"Wrote: {OUTFILE.relative_to(ROOT)}")
+
+    # 5) Report
+    print(f"Sales raw: {len(raw)}  -> prepared: {len(cleaned)}")
+    print(f"Wrote: {OUTFILE.as_posix()}")
 
 
 if __name__ == "__main__":
