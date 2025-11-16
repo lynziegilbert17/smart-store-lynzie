@@ -176,3 +176,123 @@ Each time forward progress is made, remember to git add-commit-push.
 ```powershell
 $env:PYTHONPATH="src"; python -m analytics_project.data_prep
 
+## P4 – Create and Populate Data Warehouse (DW)
+
+### Overview
+
+In P4, I designed and implemented a small star-schema data warehouse for the smart-store project.
+The DW is built with SQLite and populated from the prepared CSV files created in earlier modules.
+
+- DW database file: `data/dw/smart_store_dw.db`
+- ETL script: `src/analytics_project/dw/etl_to_dw.py`
+- Source data:
+  - `data/prepared/customers_data_prepared.csv`
+  - `data/prepared/products_data_prepared.csv`
+  - `data/prepared/sales_data_prepared.csv`
+
+The ETL script:
+1. Creates the DW schema (dimension and fact tables).
+2. Loads customers, products, and sales from the prepared CSVs.
+3. Logs progress and any errors to `project.log`.
+
+---
+
+### Schema Design
+
+I used a **star schema** with:
+
+- **Fact table**
+  - `sale` – one row per transaction.
+
+- **Dimension tables**
+  - `customer`
+  - `product`
+
+#### customer (dimension)
+
+```text
+customer_id        INTEGER  PRIMARY KEY
+name               TEXT     NOT NULL
+region             TEXT
+join_date          TEXT     -- ISO 8601 date string
+loyalty_points_qty INTEGER
+contact_method     TEXT
+
+#### product (dimension)
+
+```text
+product_id   INTEGER  PRIMARY KEY
+product_name TEXT     NOT NULL
+category     TEXT
+unit_price   REAL
+stock_qty    INTEGER
+supplier     TEXT
+
+#### sale (fact)
+
+```text
+sale_id      INTEGER  PRIMARY KEY
+customer_id  INTEGER  -- FK to customer.customer_id
+product_id   INTEGER  -- FK to product.product_id
+store_id     INTEGER
+campaign_id  INTEGER
+sale_amount  REAL     NOT NULL
+discount_pct REAL
+payment_type TEXT
+sale_date    TEXT     -- ISO 8601 date string
+
+FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
+FOREIGN KEY (product_id)  REFERENCES product(product_id)
+
+How to Run the ETL and Build the DW
+
+From the project root (smart-store-lynzie):
+
+uv run python -m analytics_project.dw.etl_to_dw
+
+
+This will:
+
+Connect (or create) data/dw/smart_store_dw.db
+
+Create the customer, product, and sale tables if they do not exist
+
+Load data from the prepared CSVs into the DW
+
+Log details to project.log
+
+Verifying the DW
+
+I used the VS Code SQLite extension (alexcvzz.vscode-sqlite) to confirm the DW was created and populated.
+
+Open smart_store_dw.db in the SQLite Explorer panel.
+
+Check that:
+
+customer has 198 rows (one per customer)
+
+product has 99 rows
+
+sale has 1650 rows
+
+Screenshots
+
+(Replace these image paths with your actual screenshot files.)
+
+![Customer table](docs/img/dw_customer_table.png)
+![Product table](docs/img/dw_product_table.png)
+![Sale fact table](docs/img/dw_sale_table.png)
+
+Challenges and Notes
+
+Column name mismatches
+I had to carefully map CSV headers to DW column names (e.g., CustomerID → customer_id, ProductName → product_name).
+A couple of early runs failed with key/NOT NULL errors until the mappings were fixed.
+
+NOT NULL constraints
+The name and product_name columns are NOT NULL, so the ETL code skips any rows that are missing those values to avoid constraint errors.
+
+Date handling
+Dates are kept as ISO 8601 strings (YYYY-MM-DD) in SQLite for simplicity, which matches the prepared CSVs.
+
+Overall, the DW now supports querying sales by customer, product, region, category, date, and other attributes for future BI and analytics tasks.
