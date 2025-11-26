@@ -296,3 +296,30 @@ Date handling
 Dates are kept as ISO 8601 strings (YYYY-MM-DD) in SQLite for simplicity, which matches the prepared CSVs.
 
 Overall, the DW now supports querying sales by customer, product, region, category, date, and other attributes for future BI and analytics tasks.
+
+## P5. Reporting with Power BI
+
+### Operating system and tools
+
+- Operating system: Windows 10
+- Reporting tool: Power BI Desktop (connected to my SQLite data warehouse via ODBC using the SQLite3 ODBC driver and a DSN named `SmartSalesDSN`).
+
+### SQL queries and reports
+
+For this phase, I focused on reporting from the warehouse rather than changing the warehouse design.
+
+- I used a custom SQL query in Power BI (ODBC.Query with `dsn=SmartSalesDSN`) to create a **Top Customers** dataset that joins `sale` and `customer`, groups by customer name, and calculates `total_spent` using `SUM(sale_amount)`, ordered from highest to lowest.
+- In Power BI I built several visuals based on the warehouse tables (`customer`, `product`, `sale`) and the Top Customers query:
+  - A **Top Customers bar chart** showing the customers with the highest total spending.
+  - A **matrix** showing **product category (rows)** by **customer region (columns)** with **Sum of sale_amount** for dicing across two categorical dimensions.
+  - A **time-series chart** using the derived `Year`, `Quarter`, and `Month Name` columns from `sale_date` to support drilldown.
+  - A **date slicer** on `sale_date` to filter all visuals by date.
+
+### Screenshots
+
+I captured and committed screenshots to show the key operations:
+
+1. **Model view** – Power BI Model view showing relationships from `sale` to `customer` (on `customer_id`) and from `sale` to `product` (on `product_id`), plus the `Top Customers` query.
+2. **Slice** – Report page showing the `sale_date` slicer controlling the visuals.
+3. **Dice** – Matrix visual with product `category` on rows, customer `region` on columns, and `Sum of sale_amount` in the cells.
+4. **Drilldown** – Line or column chart with a date hierarchy (Year > Quarter > Month Name) and drilldown enabled, along with an example of the drilled level.
