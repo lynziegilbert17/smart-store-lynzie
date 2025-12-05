@@ -338,3 +338,106 @@ I captured and committed screenshots to show the key operations:
 ```
 ::contentReference[oaicite:0]{index=0}
 ```
+# P7 Custom BI Project – Blossoms & Bees Lavender Farm
+
+## Section 1. The Business Goal
+
+This custom BI project uses a hypothetical lavender farm, **Blossoms & Bees**, as the business context.
+Business question:
+
+**Which products and sales channels generate the most revenue and value per transaction over time, and how could Blossoms & Bees adjust future production and sales strategy?**
+
+This matters because a small farm has limited time, land, and budget. Knowing which “products” and “channels” perform best helps plan what to make more of, where to sell it, and when demand is strongest.
+
+---
+
+## Section 2. Data Source
+
+I used the prepared sales file from earlier modules:
+
+- `data/prepared/sales_data_prepared.csv`
+
+Key fields used:
+
+- `TransactionID` – individual sale
+- `ProductID` – represents a lavender product line
+- `StoreID` – represents a sales channel (farm stand, market, online, etc.)
+- `SaleAmount` – revenue for the transaction
+
+For this project, I generated a synthetic `YearMonth` field in Python to simulate seasonal patterns for Blossoms & Bees.
+
+---
+
+## Section 3. Tools Used
+
+- **Python + pandas** – to load the prepared sales data, engineer a YearMonth field, and aggregate to a summary table.
+- **Power BI Desktop** – to build measures, create visualizations, and explore insights.
+
+---
+
+## Section 4. Workflow & Logic
+
+1. **Python data prep**
+   - Read `data/prepared/sales_data_prepared.csv` into pandas.
+   - Created a fake date sequence (`2024-01-01` forward, every 7 days) to assign a `YearMonth` value to each row for a more realistic seasonal pattern.
+   - Grouped by `ProductID`, `StoreID`, and `YearMonth`.
+   - Calculated:
+     - `total_revenue = sum(SaleAmount)`
+     - `transaction_count = count(TransactionID)`
+   - Saved the result to `data/analysis/blossoms_bees_summary.csv`.
+
+2. **Power BI model**
+   - Loaded `data/analysis/blossoms_bees_summary.csv` as table **BlossomsBeesSummary**.
+   - Created measures:
+     - `Total Revenue = SUM(BlossomsBeesSummary[total_revenue])`
+     - `Transaction Count = SUM(BlossomsBeesSummary[transaction_count])`
+     - `Avg Revenue per Transaction = DIVIDE([Total Revenue], [Transaction Count])`.
+
+3. **Visualizations**
+   - Built visuals to compare revenue over time by channel and average revenue per transaction by product.
+
+---
+
+## Section 5. Results (narrative + visualizations)
+
+Key visuals:
+
+1. **Stacked column chart – Total Revenue by YearMonth and StoreID**
+   - Shows total revenue over time with each StoreID as a different color stack.
+   - I interpreted StoreID as different Blossoms & Bees sales channels.
+
+2. **Clustered bar chart – Avg Revenue per Transaction by ProductID**
+   - Shows which products generate the highest value per sale.
+
+_Screenshot of the final dashboard would go here in a full report._
+
+Key findings:
+
+- Some channels (e.g., a specific StoreID) consistently generate higher total revenue across many months.
+- Certain ProductIDs stand out with much higher average revenue per transaction, acting like “hero” products.
+- Revenue varies across months, suggesting that planning around seasonal peaks would be important for a real lavender farm.
+
+---
+
+## Section 6. Suggested Business Action
+
+If these patterns represented the real Blossoms & Bees farm, I would recommend:
+
+- **Prioritize high-value products** (top ProductIDs by average revenue per transaction) in production, marketing, and display space.
+- **Focus on the strongest channels** (top StoreIDs by total revenue) when scheduling events, stocking inventory, or planning promotions.
+- Use lower-performing products or channels for experiments: bundles, samples, or targeted promotions instead of heavy production.
+
+---
+
+## Section 7. Challenges
+
+- **Python environment / path issues** – I had to use the virtual environment executable directly
+  (`.\.venv\Scripts\python.exe`) instead of the plain `python` command.
+- **Column naming differences** – the prepared file did not have `order_date` or `product_category`; I adjusted the script to use the actual fields (`SaleDate`, `ProductID`, `StoreID`, `SaleAmount`, `TransactionID`).
+- **Date variety** – the original data did not have nice monthly variety for this story, so I created synthetic dates to spread the data across multiple months.
+
+---
+
+## Section 8. Ethical Considerations
+
+For this hypothetical Blossoms & Bees project, I considered several ethical issues. First, if the data represented real customers, it would need to be stored securely and used only for legitimate business purposes (no unnecessary sharing or selling of personal information). Second, the analysis could reinforce bias if I treated one “channel” or customer group as more valuable without checking whether all customers have equal opportunity to buy. Third, the results are based on a limited snapshot of transactions and a simplified model, so I would avoid making major production or staffing decisions without validating the data and checking for missing or bad records. Finally, I used AI (ChatGPT) to help design the analysis and code, but the business is still responsible for reviewing the logic, validating results, and not blindly automating decisions without human judgment.
